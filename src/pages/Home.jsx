@@ -1,5 +1,4 @@
 import { Header } from '../components/Header';
-import { useEffect } from 'react';
 
 
 export function Home() {

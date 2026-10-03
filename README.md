@@ -1,3 +1,33 @@
+# Nexo Gestão | Frontend
+
+Aplicação React/Vite para gestão de clientes, catálogo, estoque e pedidos. A sessão usa cookie `HttpOnly`; tokens não são persistidos em `localStorage`.
+
+## Executar
+
+1. Instale Node.js 20 ou superior.
+2. Copie `.env.example` para `.env` e informe a URL da API.
+3. Execute:
+
+```powershell
+npm install
+npm run dev
+```
+
+O front usa `http://localhost:3000` por padrão. Ajuste `VITE_API_URL` se o backend estiver em outro endereço.
+
+## Verificações
+
+```powershell
+npm run lint
+npm run build
+```
+
+## Módulos
+
+- `src/services/api.js`: chamadas HTTP e credenciais de sessão.
+- `src/contexts`: sessão autenticada.
+- `src/pages`: visão geral, clientes, produtos e pedidos.
+- `src/components`: navegação, modais e avisos reutilizáveis.
 # React + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
