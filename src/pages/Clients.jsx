@@ -5,8 +5,6 @@ import { Modal } from "../components/Modal";
 import { Notice } from "../components/Notice";
 import { PhoneInput } from "../components/PhoneInput";
 import { formatPhone } from "../utils/phone";
-import { tw } from "../components/tw";
-
 const emptyClient = { nome: "", telefone: "" };
 
 export function Clients() {
@@ -97,30 +95,45 @@ export function Clients() {
   }
 
   return (
-    <div className={tw.modulePage}>
-      <div className={tw.pageHeading}>
+    <div className="animate-[settle-in_0.35s_ease_both]">
+      <div className="mb-[27px] flex items-end justify-between gap-6 max-[620px]:mb-5 max-[620px]:flex-col max-[620px]:items-start max-[620px]:gap-4">
         <div>
-          <span className={`${tw.eyebrow} ${tw.pageHeadingEyebrow}`}>RELACIONAMENTO</span>
-          <h1 className={tw.pageTitle}>Clientes</h1>
-          <p className={tw.pageDescription}>Uma base organizada deixa cada atendimento mais próximo.</p>
+          <span
+            className={`text-[10px] font-bold tracking-[1px] text-[#839087] mb-[9px] block`}
+          >
+            RELACIONAMENTO
+          </span>
+          <h1 className="m-0 font-display text-[27px] font-bold leading-tight text-[#27342b] max-[620px]:text-2xl">
+            Clientes
+          </h1>
+          <p className="mb-0 mt-2 text-base text-muted">
+            Uma base organizada deixa cada atendimento mais próximo.
+          </p>
         </div>
-        <button className={`${tw.button} ${tw.buttonPrimary} ${tw.fullMobileButton}`} onClick={() => openForm()}>
+        <button
+          className={`inline-flex min-h-[42px] items-center justify-center gap-2 rounded-[5px] border border-transparent px-[15px] text-base font-bold transition hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-60 bg-nexo text-white hover:bg-nexo-hover max-[620px]:w-full`}
+          onClick={() => openForm()}
+        >
           <UserPlus size={17} /> Novo cliente
         </button>
       </div>
       <Notice notice={notice} onClose={() => setNotice(null)} />
-      <section className={`${tw.panel} ${tw.moduleSection}`}>
-        <div className={tw.listToolbar}>
-          <div className={tw.listCount}>
-            <strong className={tw.listCountStrong}>{clients.length}</strong>{" "}
+      <section
+        className={`min-w-0 rounded-[5px] border border-[#e5e9e2] bg-white px-[18px] pb-[5px] max-[620px]:px-3`}
+      >
+        <div className="flex min-h-[67px] items-center justify-between gap-4 border-b border-[#edf0eb] max-[620px]:flex-col max-[620px]:items-start max-[620px]:py-[13px]">
+          <div className="text-sm text-[#778178]">
+            <strong className="font-display text-base font-bold text-[#334138]">
+              {clients.length}
+            </strong>{" "}
             {clients.length === 1
               ? "cliente cadastrado"
               : "clientes cadastrados"}
           </div>
-          <label className={tw.searchField}>
+          <label className="flex h-[35px] w-full max-w-[280px] items-center gap-2 rounded border border-[#e1e7de] bg-white px-[10px] text-[#8b958c] max-[620px]:max-w-full">
             <Search size={17} />
             <input
-              className={tw.searchInput}
+              className="min-w-0 w-full border-0 bg-transparent p-0 text-sm text-ink outline-none placeholder:text-[#a1a9a1] focus-visible:outline-none"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Buscar por nome ou telefone"
@@ -129,63 +142,89 @@ export function Clients() {
           </label>
         </div>
         {error && (
-          <p className={tw.warning} role="alert">
+          <p
+            className="mb-4 mt-[-11px] rounded border border-[#f0e3c3] bg-[#fcf7e9] px-3 py-2.5 text-sm text-[#8c672b]"
+            role="alert"
+          >
             {error}
           </p>
         )}
         {loading ? (
-          <div className={tw.emptyState}>Carregando clientes...</div>
+          <div className="flex min-h-[190px] flex-col items-center justify-center gap-2 px-4 py-[30px] text-center">
+            Carregando clientes...
+          </div>
         ) : filtered.length === 0 ? (
-          <div className={tw.emptyState}>
-            <span className={tw.emptySymbol}>
+          <div className="flex min-h-[190px] flex-col items-center justify-center gap-2 px-4 py-[30px] text-center">
+            <span className="grid h-[39px] w-[39px] place-items-center rounded-full border border-[#e2eadc] bg-[#f5f8f2] text-[#607e5c]">
               <Users size={20} />
             </span>
-            <strong className={tw.emptyTitle}>
+            <strong className="mt-1 font-display text-base font-bold text-[#3e4d42]">
               {query ? "Nenhum resultado encontrado" : "Sua base começa aqui"}
             </strong>
-            <span className={tw.emptyDescription}>
+            <span className="max-w-[310px] text-sm leading-relaxed text-[#8a948b]">
               {query
                 ? "Tente ajustar a busca."
                 : "Cadastre o primeiro cliente para manter contatos e pedidos juntos."}
             </span>
             {!query && (
-              <button className={tw.buttonText} onClick={() => openForm()}>
+              <button
+                className="inline-flex items-center justify-center gap-1.5 border-0 bg-transparent p-[5px] text-base font-bold text-[#365b42] hover:text-[#70913f]"
+                onClick={() => openForm()}
+              >
                 Cadastrar cliente <ArrowUpRight size={14} />
               </button>
             )}
           </div>
         ) : (
-          <div className={tw.tableWrap}>
-            <table className={tw.table}>
+          <div className="w-full overflow-x-auto">
+            <table className="table-mobile-cards w-full border-collapse text-left whitespace-nowrap">
               <thead>
                 <tr>
-                  <th className={tw.th}>CLIENTE</th>
-                  <th className={tw.th}>TELEFONE</th>
-                  <th className={`${tw.th} ${tw.alignRight}`}>AÇÕES</th>
+                  <th className="h-[39px] border-b border-[#edf0eb] px-3 text-xs font-bold tracking-[.5px] text-[#929a92]">
+                    CLIENTE
+                  </th>
+                  <th className="h-[39px] border-b border-[#edf0eb] px-3 text-xs font-bold tracking-[.5px] text-[#929a92]">
+                    TELEFONE
+                  </th>
+                  <th
+                    className={`h-[39px] border-b border-[#edf0eb] px-3 text-xs font-bold tracking-[.5px] text-[#929a92] text-right`}
+                  >
+                    AÇÕES
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.map((client) => (
-                  <tr className={tw.rowHover} key={client.id}>
+                  <tr className="[&:hover]:bg-[#fbfcfa]" key={client.id}>
                     <td data-label="Cliente">
-                      <div className={tw.personCell}>
-                        <span className={tw.personAvatar}>
+                      <div className="pl-2 flex items-center gap-2.5">
+                        <span className="grid h-[31px] w-[31px] shrink-0 place-items-center rounded-full bg-[#ecf2e9] font-display text-xs font-bold text-[#46684c]">
                           {client.nome?.charAt(0)?.toUpperCase()}
                         </span>
-                        <span className={tw.cellStrong}>{client.nome}</span>
+                        <span className="font-bold text-[#3a473d]">
+                          {client.nome}
+                        </span>
                       </div>
                     </td>
-                    <td data-label="Telefone" className={tw.td}>{formatPhone(client.telefone)}</td>
-                    <td data-label="Ações" className={`${tw.td} ${tw.alignRight}`}>
-                      <div className={tw.rowActions}>
+                    <td
+                      data-label="Telefone"
+                      className="h-[57px] border-b border-[#f0f2ee] px-3 text-md text-[#707b72]"
+                    >
+                      {formatPhone(client.telefone)}
+                    </td>
+                    <td
+                      data-label="Ações"
+                      className={`h-[57px] border-b border-[#f0f2ee] px-3 text-md text-[#707b72] text-right`}
+                    >
+                      <div className="inline-flex items-center gap-[5px]">
                         <button
-                          className={tw.tableAction}
+                          className="rounded-sm border-0 bg-transparent px-[7px] py-1.5 text-sm font-semibold text-[#55734d] hover:bg-[#eff5e9]"
                           onClick={() => openForm(client)}
                         >
                           Editar
                         </button>
                         <button
-                          className={`${tw.tableAction} ${tw.dangerAction}`}
+                          className={`rounded-sm border-0 bg-transparent px-[7px] py-1.5 text-sm font-semibold text-[#55734d] hover:bg-[#eff5e9] text-[#ae6257] hover:bg-[#fff0ec]`}
                           onClick={() => remove(client)}
                         >
                           Excluir
@@ -205,12 +244,12 @@ export function Clients() {
           description="Mantenha as informações de contato atualizadas."
           onClose={() => setModalOpen(false)}
         >
-          <form className={tw.modalForm} onSubmit={save}>
-            <label className={tw.formLabel}>
+          <form className="grid gap-[15px]" onSubmit={save}>
+            <label className="grid gap-2 text-base font-semibold text-[#3e4941]">
               Nome completo
               <input
                 autoFocus
-                className={tw.input}
+                className="min-h-[39px] w-full rounded border border-[#dfe5dd] bg-white px-[10px] py-2 text-base font-normal text-[#344238] outline-none"
                 name="nome"
                 value={form.nome}
                 onChange={(event) =>
@@ -220,7 +259,7 @@ export function Clients() {
                 required
               />
             </label>
-            <label className={tw.formLabel}>
+            <label className="grid gap-2 text-base font-semibold text-[#3e4941]">
               Telefone
               <PhoneInput
                 name="telefone"
@@ -229,15 +268,18 @@ export function Clients() {
                 required
               />
             </label>
-            <div className={tw.modalActions}>
+            <div className="flex justify-between gap-2 pt-[7px]">
               <button
                 type="button"
-                className={`${tw.button} ${tw.buttonSecondary}`}
+                className={`inline-flex min-h-[42px] items-center justify-center gap-2 rounded-[5px] border border-transparent px-[15px] text-base font-bold transition hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-60 border-[#dce3da] bg-white text-[#34453a] hover:border-[#c8d3c5] hover:bg-[#f2f5ef]`}
                 onClick={() => setModalOpen(false)}
               >
                 Cancelar
               </button>
-              <button className={`${tw.button} ${tw.buttonPrimary}`} disabled={busy}>
+              <button
+                className={`inline-flex min-h-[42px] items-center justify-center gap-2 rounded-[5px] border border-transparent px-[15px] text-base font-bold transition hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-60 bg-nexo text-white hover:bg-nexo-hover`}
+                disabled={busy}
+              >
                 {busy ? "Salvando..." : "Salvar cliente"}
               </button>
             </div>

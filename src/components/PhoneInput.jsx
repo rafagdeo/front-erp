@@ -1,7 +1,5 @@
 import { NumberFormatBase } from 'react-number-format'
 import { phoneDigits } from '../utils/phone'
-import { tw } from './tw'
-
 function formatPhoneInput(value) {
   const digits = phoneDigits(value)
   if (digits.length <= 2) return digits
@@ -21,7 +19,7 @@ export function PhoneInput({ value, onValueChange, className = '', ...props }) {
   return (
     <NumberFormatBase
       {...props}
-      className={`${tw.input} ${className}`.trim()}
+      className={className || "min-h-[39px] w-full rounded border border-[#dfe5dd] bg-white px-[10px] py-2 text-base font-normal text-[#344238] outline-none"}
       type="tel"
       inputMode="numeric"
       value={digits}

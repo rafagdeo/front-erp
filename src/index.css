@@ -74,7 +74,7 @@ select:-webkit-autofill {
   transition: background-color 99999s ease-out;
 }
 
-@media (max-width: 620px) {
+@media (max-width: 1050px) {
   .table-mobile-cards,
   .table-mobile-cards tbody {
     display: block;
@@ -98,6 +98,10 @@ select:-webkit-autofill {
     background: var(--paper);
   }
 
+  .table-mobile-cards.orders-table {
+    min-width: 100%;
+  }
+
   .table-mobile-cards td {
     display: flex;
     min-height: 40px;
@@ -115,7 +119,7 @@ select:-webkit-autofill {
     flex: 0 0 auto;
     color: var(--muted);
     content: attr(data-label);
-    font-size: 10px;
+    font-size: 14px;
     font-weight: 700;
     letter-spacing: .04em;
     text-align: left;

@@ -26,8 +26,10 @@ npm run build
 
 - `src/services/api.js`: chamadas HTTP e credenciais de sessão.
 - `src/contexts`: sessão autenticada.
-- `src/pages`: visão geral, clientes, produtos e pedidos.
+- `src/pages`: visão geral, clientes, produtos, pedidos e perfil.
 - `src/components`: navegação, modais e avisos reutilizáveis.
+
+No perfil, cada usuário pode salvar sua própria mensagem do WhatsApp. Os placeholders disponíveis são `{nome_cliente}`, `{id_pedido}`, `{produtos}`, `{total}`, `{parcelas}`, `{parcela_pendente}` e `{prazo_pagamento}`.
 # React + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.

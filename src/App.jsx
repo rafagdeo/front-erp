@@ -7,11 +7,10 @@ import { Dashboard } from './pages/Dashboard'
 import { Clients } from './pages/Clients'
 import { Products } from './pages/Products'
 import { Orders } from './pages/Orders'
-import { tw } from './components/tw'
-
+import { Profile } from './pages/Profile'
 function ProtectedRoutes() {
   const { user, loading } = useAuth()
-  if (loading) return <div className={tw.screenLoader}><span className={tw.brandMark}>n.</span></div>
+  if (loading) return <div className="grid min-h-screen place-items-center bg-nexo"><span className="inline-grid h-[42px] w-[42px] place-items-center rounded-[9px] bg-nexo-lime font-display text-2xl font-extrabold leading-none text-nexo">n.</span></div>
   if (!user) return <Navigate to="/login" replace />
 
   return (
@@ -21,6 +20,7 @@ function ProtectedRoutes() {
         <Route path="/clients" element={<Clients />} />
         <Route path="/products" element={<Products />} />
         <Route path="/orders" element={<Orders />} />
+        <Route path="/profile" element={<Profile />} />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </AppShell>

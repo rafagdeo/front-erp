@@ -4,10 +4,16 @@ export function phoneDigits(value) {
 
 export function formatPhone(value) {
   const digits = phoneDigits(value)
-  if (digits.length < 10) return digits
+  if (!digits) return ''
   const area = digits.slice(0, 2)
   const subscriber = digits.slice(2)
-  return digits.length > 10
-    ? `(${area}) ${subscriber.slice(0, 5)}-${subscriber.slice(5)}`
-    : `(${area}) ${subscriber.slice(0, 4)}-${subscriber.slice(4)}`
+  if (digits.length <= 2) return `(${area}${digits.length === 2 ? ')' : ''}`
+  const prefixLength = digits.length > 10 ? 5 : 4
+  const prefix = subscriber.slice(0, prefixLength)
+  const suffix = subscriber.slice(prefixLength)
+  return `(${area}) ${prefix}${suffix ? `-${suffix}` : ''}`
+}
+
+export function isValidPhone(value) {
+  return /^\d{10,11}$/.test(String(value || ''))
 }

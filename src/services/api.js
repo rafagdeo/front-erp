@@ -24,6 +24,7 @@ export const api = {
   login: (credentials) => request('/login', json('POST', credentials)),
   register: (data) => request('/register', json('POST', data)),
   me: () => request('/me'),
+  updateProfile: (data) => request('/profile', json('PATCH', data)),
   logout: () => request('/logout', { method: 'POST' }),
   clients: () => request('/list-clients'),
   createClient: (data) => request('/create-client', json('POST', data)),
