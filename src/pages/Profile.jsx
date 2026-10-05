@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { BadgeCheck, MessageCircle, Save, UserRound } from 'lucide-react'
+import { BadgeCheck, Save, UserRound } from 'lucide-react'
 import { Notice } from '../components/Notice'
 import { useAuth } from '../contexts/useAuth'
 import { PhoneInput } from '../components/PhoneInput'

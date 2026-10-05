@@ -15,7 +15,17 @@ npm run dev
 
 O front usa `http://localhost:3000` por padrão. Ajuste `VITE_API_URL` se o backend estiver em outro endereço.
 
-## Verificações
+## Publicação na Hostinger
+
+1. Configure `VITE_API_URL` com a URL HTTPS do backend no `.env` do frontend antes de executar `npm run build`. Sem essa variável, a produção usa `/api`, que exige um proxy para o backend; não usa localhost.
+2. No backend, configure `NODE_ENV=production`, `JWT_SECRET` e `FRONTEND_URL=https://whitesmoke-mink-160484.hostingersite.com` (ou o domínio definitivo). Para mais de uma origem, separe por vírgulas.
+3. Publique o conteúdo de `dist` na pasta pública da Hostinger e publique/reinicie o backend com as alterações.
+4. Acesse a raiz do site. As rotas usam hash (`/#/login`, `/#/dashboard`, `/#/orders`) para funcionar em hospedagem estática ao atualizar com F5. Links antigos como `/orders` precisam ser substituídos; se quiser mantê-los, o servidor deve aplicar o `.htaccess` incluído em `dist` para entregar `index.html`.
+5. Verifique: sem sessão, abrir `/#/orders` deve levar ao login; após login, atualizar `/#/orders` deve preservar a página; abrir `/#/login` autenticado deve levar ao dashboard; após logout, as páginas protegidas devem levar ao login.
+
+A sessão usa cookie HttpOnly com `SameSite=None; Secure` em produção. Se o navegador bloquear cookies de terceiros, hospede a API no mesmo site do frontend (por exemplo, `api.seudominio.com` e `app.seudominio.com`, ambos HTTPS), ou configure um proxy `/api`. O frontend confirma a sessão em `/me` antes de considerar o login concluído.
+
+## Comandos de verificação
 
 ```powershell
 npm run lint

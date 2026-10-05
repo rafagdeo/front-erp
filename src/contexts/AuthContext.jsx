@@ -8,6 +8,8 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     let active = true
+    const expireSession = () => setUser(null)
+    window.addEventListener('auth:expired', expireSession)
     api.me()
       .then(({ user: currentUser }) => {
         if (active) setUser(currentUser)
@@ -19,11 +21,15 @@ export function AuthProvider({ children }) {
         if (active) setLoading(false)
       })
 
-    return () => { active = false }
+    return () => {
+      active = false
+      window.removeEventListener('auth:expired', expireSession)
+    }
   }, [])
 
   async function login(credentials) {
-    const result = await api.login(credentials)
+    await api.login(credentials)
+    const result = await api.me()
     setUser(result.user)
   }
 
