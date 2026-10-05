@@ -9,10 +9,6 @@ import { Products } from './pages/Products'
 import { Orders } from './pages/Orders'
 import { Profile } from './pages/Profile'
 function ProtectedRoutes() {
-  const { user, loading } = useAuth()
-  if (loading) return <div className="grid min-h-screen place-items-center bg-nexo"><span className="inline-grid h-[42px] w-[42px] place-items-center rounded-[9px] bg-nexo-lime font-display text-2xl font-extrabold leading-none text-nexo">n.</span></div>
-  if (!user) return <Navigate to="/login" replace />
-
   return (
     <AppShell>
       <Routes>
@@ -27,13 +23,23 @@ function ProtectedRoutes() {
   )
 }
 
+function AppRoutes() {
+  const { user, loading } = useAuth()
+
+  if (loading) return <div className="grid min-h-screen place-items-center bg-nexo"><span className="inline-grid h-[42px] w-[42px] place-items-center rounded-[9px] bg-nexo-lime font-display text-2xl font-extrabold leading-none text-nexo">n.</span></div>
+
+  return (
+    <Routes>
+      <Route path="/login" element={user ? <Navigate to="/dashboard" replace /> : <Login />} />
+      <Route path="/*" element={user ? <ProtectedRoutes /> : <Navigate to="/login" replace />} />
+    </Routes>
+  )
+}
+
 export function App() {
   return (
     <AuthProvider>
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/*" element={<ProtectedRoutes />} />
-      </Routes>
+      <AppRoutes />
     </AuthProvider>
   )
 }
