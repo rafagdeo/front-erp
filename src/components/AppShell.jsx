@@ -4,10 +4,10 @@ import { Boxes, ChartNoAxesCombined, ChevronDown, CircleUserRound, Command, LogO
 import { useAuth } from '../contexts/useAuth'
 const navigation = [
   { to: '/dashboard', label: 'Visão geral', icon: ChartNoAxesCombined },
-  { to: '/orders', label: 'Pedidos', icon: ShoppingBag },
-  { to: '/products', label: 'Produtos', icon: Boxes },
-  { to: '/clients', label: 'Clientes', icon: Users },
-  { to: '/profile', label: 'Meu perfil', icon: CircleUserRound },
+  { to: '/dashboard/orders', label: 'Pedidos', icon: ShoppingBag },
+  { to: '/dashboard/products', label: 'Produtos', icon: Boxes },
+  { to: '/dashboard/clients', label: 'Clientes', icon: Users },
+  { to: '/dashboard/profile', label: 'Meu perfil', icon: CircleUserRound },
 ]
 
 const pageNames = { '/dashboard': 'Visão geral', '/orders': 'Pedidos', '/products': 'Produtos', '/clients': 'Clientes', '/profile': 'Meu perfil' }

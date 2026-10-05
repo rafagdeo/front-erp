@@ -13,10 +13,10 @@ function ProtectedRoutes() {
     <AppShell>
       <Routes>
         <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/clients" element={<Clients />} />
-        <Route path="/products" element={<Products />} />
-        <Route path="/orders" element={<Orders />} />
-        <Route path="/profile" element={<Profile />} />
+        <Route path="/dashboard/clients" element={<Clients />} />
+        <Route path="/dashboard/products" element={<Products />} />
+        <Route path="/dashboard/orders" element={<Orders />} />
+        <Route path="/dashboard/profile" element={<Profile />} />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </AppShell>

@@ -114,10 +114,10 @@ export function Dashboard() {
           <p className="mb-0 mt-2 text-base text-muted">Acompanhe o que está acontecendo na operação.</p>
         </div>
         <div className="flex items-center gap-2 max-[620px]:w-full">
-          <Link className={`inline-flex min-h-[42px] items-center justify-center gap-2 rounded-[5px] border border-transparent px-[15px] text-base font-bold transition hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-60 border-[#dce3da] bg-white text-[#34453a] hover:border-[#c8d3c5] hover:bg-[#f2f5ef] max-[620px]:flex-1`} to="/clients">
+          <Link className={`inline-flex min-h-[42px] items-center justify-center gap-2 rounded-[5px] border border-transparent px-[15px] text-base font-bold transition hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-60 border-[#dce3da] bg-white text-[#34453a] hover:border-[#c8d3c5] hover:bg-[#f2f5ef] max-[620px]:flex-1`} to="/dashboard/clients">
             <Plus size={17} /> Novo cliente
           </Link>
-          <Link className={`inline-flex min-h-[42px] items-center justify-center gap-2 rounded-[5px] border border-transparent px-[15px] text-base font-bold transition hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-60 bg-nexo text-white hover:bg-nexo-hover max-[620px]:flex-1`} to="/orders">
+          <Link className={`inline-flex min-h-[42px] items-center justify-center gap-2 rounded-[5px] border border-transparent px-[15px] text-base font-bold transition hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-60 bg-nexo text-white hover:bg-nexo-hover max-[620px]:flex-1`} to="/dashboard/orders">
             <Plus size={17} /> Criar pedido
           </Link>
         </div>
@@ -148,7 +148,7 @@ export function Dashboard() {
               <span className={`text-[10px] font-bold tracking-[1px] text-[#839087] mb-1.5 block`}>MOVIMENTAÇÃO</span>
               <h2 className="m-0 font-display text-xl font-bold leading-tight text-[#2d3930]">Pedidos recentes</h2>
             </div>
-            <Link to="/orders" className="inline-flex items-center gap-1.5 text-sm font-bold text-[#52734e] hover:text-[#70913f]">
+            <Link to="/dashboard/orders" className="inline-flex items-center gap-1.5 text-sm font-bold text-[#52734e] hover:text-[#70913f]">
               Ver todos <ArrowRight size={15} />
             </Link>
           </div>
@@ -161,7 +161,7 @@ export function Dashboard() {
               </span>
               <strong className="mt-1 font-display text-base font-bold text-[#3e4d42]">Nenhum pedido por aqui</strong>
               <span className="max-w-[310px] text-sm leading-relaxed text-[#8a948b]">Seus novos pedidos vão aparecer nesta lista.</span>
-              <Link className="mt-[5px] inline-flex items-center gap-[5px] text-sm font-bold text-[#55734d]" to="/orders">
+              <Link className="mt-[5px] inline-flex items-center gap-[5px] text-sm font-bold text-[#55734d]" to="/dashboard/orders">
                 Registrar pedido <ArrowRight size={14} />
               </Link>
             </div>
@@ -217,7 +217,7 @@ export function Dashboard() {
               <h2 className="m-0 font-display text-xl font-bold leading-tight text-[#2d3930]">Atalhos úteis</h2>
             </div>
           </div>
-          <Link className="flex min-h-[65px] items-center gap-2.5 border-b border-[#edf0eb] max-[850px]:min-h-[58px]" to="/orders">
+          <Link className="flex min-h-[65px] items-center gap-2.5 border-b border-[#edf0eb] max-[850px]:min-h-[58px]" to="/dashboard/orders">
             <span className={`grid h-8 w-8 shrink-0 place-items-center rounded bg-[#fcebe5] text-[#bd674f]`}>
               <ShoppingBag size={18} />
             </span>
@@ -227,7 +227,7 @@ export function Dashboard() {
             </span>
             <ArrowUpRight className="text-[#98a198]" size={16} />
           </Link>
-          <Link className="flex min-h-[65px] items-center gap-2.5 border-b border-[#edf0eb] max-[850px]:min-h-[58px]" to="/products">
+          <Link className="flex min-h-[65px] items-center gap-2.5 border-b border-[#edf0eb] max-[850px]:min-h-[58px]" to="/dashboard/products">
             <span className={`grid h-8 w-8 shrink-0 place-items-center rounded bg-[#f8f0dd] text-[#ac7b31]`}>
               <Boxes size={18} />
             </span>
@@ -245,7 +245,7 @@ export function Dashboard() {
               <ArrowUpRight className="text-[#98a198]" size={16} />
             )}
           </Link>
-          <Link className="flex min-h-[65px] items-center gap-2.5 border-b border-[#edf0eb] max-[850px]:min-h-[58px]" to="/clients">
+          <Link className="flex min-h-[65px] items-center gap-2.5 border-b border-[#edf0eb] max-[850px]:min-h-[58px]" to="/dashboard/clients">
             <span className={`grid h-8 w-8 shrink-0 place-items-center rounded bg-[#e9eff9] text-[#5676ad]`}>
               <Users size={18} />
             </span>
