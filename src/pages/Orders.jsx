@@ -421,7 +421,8 @@ export function Orders() {
                   <th className="h-[39px] border-b border-[#edf0eb] px-3 text-xs font-bold tracking-[.5px] text-[#929a92]">PRAZO</th>
                   <th className="h-[39px] border-b border-[#edf0eb] px-3 text-xs font-bold tracking-[.5px] text-[#929a92]">PARCELA</th>
                   <th className="h-[39px] border-b border-[#edf0eb] px-3 text-xs font-bold tracking-[.5px] text-[#929a92]">STATUS</th>
-                  <th className={`h-[39px] border-b border-[#edf0eb] px-3 text-xs font-bold tracking-[.5px] text-[#929a92] text-right`}>TOTAL</th>
+                  <th className={`h-[39px] border-b border-[#edf0eb] px-3 text-xs font-bold tracking-[.5px] text-[#929a92] text-right`}>PENDENTE</th>
+                  <th className={`h-[39px] border-b border-[#edf0eb] px-3 text-xs font-bold tracking-[.5px] text-[#929a92] text-right`}>VALOR TOTAL</th>
                   <th className={`h-[39px] border-b border-[#edf0eb] px-3 text-xs font-bold tracking-[.5px] text-[#929a92] text-right`}>EFETUAR COBRANÇA</th>
                 </tr>
               </thead>
@@ -486,7 +487,13 @@ export function Orders() {
                       data-label="Total"
                       className={`h-[57px] border-b border-[#f0f2ee] px-3 text-md text-[#707b72] text-right font-bold text-[#3a473d]`}
                     >
-                      {currency(order.valor_restante ?? order.valor_total)}
+                      {currency(order.valor_restante)}
+                    </td>
+                    <td
+                      data-label="Total"
+                      className={`h-[57px] border-b border-[#f0f2ee] px-3 text-md text-[#707b72] text-right font-bold text-[#3a473d]`}
+                    >
+                      {currency(order.valor_total)}
                     </td>
                     <td data-label="Efetuar cobrança" className={`h-[57px] border-b border-[#f0f2ee] px-3 text-md text-[#707b72] text-right`}>
                       <div className="flex justify-end">

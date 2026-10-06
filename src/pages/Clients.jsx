@@ -195,7 +195,7 @@ export function Clients() {
               </thead>
               <tbody>
                 {filtered.map((client) => (
-                  <tr className="[&:hover]:bg-[#fbfcfa]" key={client.id}>
+                  <tr className="border-b border-[#f0f2ee] [&:hover]:bg-[#fbfcfa]" key={client.id}>
                     <td data-label="Cliente">
                       <div className="pl-2 flex items-center gap-2.5">
                         <span className="grid h-[31px] w-[31px] shrink-0 place-items-center rounded-full bg-[#ecf2e9] font-display text-xs font-bold text-[#46684c]">
@@ -208,13 +208,13 @@ export function Clients() {
                     </td>
                     <td
                       data-label="Telefone"
-                      className="h-[57px] border-b border-[#f0f2ee] px-3 text-md text-[#707b72]"
+                      className="h-[57px] px-3 text-md text-[#707b72]"
                     >
                       {formatPhone(client.telefone)}
                     </td>
                     <td
                       data-label="Ações"
-                      className={`h-[57px] border-b border-[#f0f2ee] px-3 text-md text-[#707b72] text-right`}
+                      className={`h-[57px] px-3 text-md text-[#707b72] text-right`}
                     >
                       <div className="inline-flex items-center gap-[5px]">
                         <button
