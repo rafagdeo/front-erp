@@ -16,6 +16,7 @@ import { CurrencyInput } from "../components/CurrencyInput";
 import { formatPhone } from "../utils/phone";
 import { useAuth } from "../contexts/useAuth";
 import { WhatsAppIcon } from "../components/WhatsAppIcon";
+import { Pagination } from "../components/Pagination";
 import {
   apiDateTime,
   currency,
@@ -69,8 +70,8 @@ function initialForm() {
   due.setDate(due.getDate() + 30);
   return {
     clienteId: "",
-    data_pedido: localDateTimeValue(),
-    prazo_pagamento: localDateTimeValue(due),
+    data_pedido: localDateTimeValue().slice(0, 10),
+    prazo_pagamento: localDateTimeValue(due).slice(0, 10),
     status: "processando",
     parcelas: "1",
     parcelas_pagas: "0",
@@ -83,10 +84,15 @@ function initialForm() {
 
 function dateTimeInput(value) {
   if (!value) return "";
+  const raw = String(value);
+  const isoDate = raw.match(/^(\d{4}-\d{2}-\d{2})/);
+  if (isoDate) return isoDate[1];
+  const brDate = raw.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+  if (brDate) return `${brDate[3]}-${brDate[2]}-${brDate[1]}`;
   const date = new Date(value);
   return Number.isNaN(date.getTime())
-    ? String(value).replace(" ", "T").slice(0, 16)
-    : localDateTimeValue(date);
+    ? ""
+    : localDateTimeValue(date).slice(0, 10);
 }
 
 function whatsAppUrl(order, template) {
@@ -131,6 +137,7 @@ export function Orders() {
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("todos");
   const [notice, setNotice] = useState(null);
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     let active = true;
@@ -162,13 +169,15 @@ export function Orders() {
       orders.filter((order) => {
         const text =
           `${order.id} ${order.cliente_nome || ""} ${order.cliente_telefone || ""}`.toLowerCase();
+        const normalizedStatus = (order.status_atualizado || order.status) === "concluido" ? "pago" : (order.status_atualizado || order.status) === "pendente" ? "processando" : (order.status_atualizado || order.status);
         return (
           text.includes(query.toLowerCase()) &&
-          (statusFilter === "todos" || (order.status_atualizado || order.status) === statusFilter)
+          (statusFilter === "todos" || normalizedStatus === statusFilter)
         );
       }),
     [orders, query, statusFilter],
   );
+  const pageOrders = visibleOrders.slice((page - 1) * 10, page * 10);
 
   async function refreshOrders() {
     setOrders(await api.orders());
@@ -371,7 +380,7 @@ export function Orders() {
               <input
                 className="w-full border-0 bg-transparent p-0 text-sm text-ink outline-none placeholder:text-[#a1a9a1] focus-visible:outline-none"
                 value={query}
-                onChange={(event) => setQuery(event.target.value)}
+                onChange={(event) => { setQuery(event.target.value); setPage(1); }}
                 placeholder="Buscar pedido ou cliente"
                 aria-label="Buscar pedidos"
               />
@@ -379,7 +388,7 @@ export function Orders() {
             <select
               className="min-h-[35px] rounded border border-[#e1e7de] bg-white px-[10px] pr-[27px] text-sm text-[#546056] max-[620px]:w-full"
               value={statusFilter}
-              onChange={(event) => setStatusFilter(event.target.value)}
+              onChange={(event) => { setStatusFilter(event.target.value); setPage(1); }}
               aria-label="Filtrar por status"
             >
               <option value="todos">Todos os status</option>
@@ -427,7 +436,7 @@ export function Orders() {
                 </tr>
               </thead>
               <tbody>
-                {visibleOrders.map((order) => (
+                {pageOrders.map((order) => (
                   <tr className="[&:hover]:bg-[#fbfcfa]" key={order.id}>
                     <td
                       data-label="Pedido"
@@ -521,7 +530,7 @@ export function Orders() {
             </table>
           </div>
           <div className="grid gap-3 py-3 min-[851px]:hidden">
-            {visibleOrders.map((order) => {
+            {pageOrders.map((order) => {
               const status = normalizeStatus(order.status_atualizado || order.status);
               const installments = Number(order.parcelas) || 1;
               const paidInstallments = Number(order.parcelas_pagas) || 0;
@@ -596,6 +605,7 @@ export function Orders() {
               );
             })}
           </div>
+          <Pagination page={page} total={visibleOrders.length} onPageChange={setPage} />
           </>
         )}
       </section>
@@ -801,7 +811,7 @@ export function Orders() {
                 <option value="">Selecione um cliente</option>
                 {clients.map((client) => (
                   <option key={client.id} value={client.id}>
-                    {client.nome} · {formatPhone(client.telefone)}
+                    {client.nome}
                   </option>
                 ))}
               </select>
@@ -811,7 +821,7 @@ export function Orders() {
                 Data do pedido
                 <input
                   className="min-h-[39px] w-full rounded border border-[#dfe5dd] bg-white px-[10px] py-2 text-base font-normal text-[#344238] outline-none"
-                  type="datetime-local"
+                  type="date"
                   value={form.data_pedido}
                   onChange={(event) =>
                     setForm({ ...form, data_pedido: event.target.value })
@@ -823,7 +833,7 @@ export function Orders() {
                 Prazo de pagamento
                 <input
                   className="min-h-[39px] w-full rounded border border-[#dfe5dd] bg-white px-[10px] py-2 text-base font-normal text-[#344238] outline-none"
-                  type="datetime-local"
+                  type="date"
                   value={form.prazo_pagamento}
                   onChange={(event) =>
                     setForm({ ...form, prazo_pagamento: event.target.value })

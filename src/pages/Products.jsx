@@ -5,6 +5,7 @@ import { Modal } from "../components/Modal";
 import { Notice } from "../components/Notice";
 import { CurrencyInput } from "../components/CurrencyInput";
 import { currency } from "../utils/format";
+import { Pagination } from "../components/Pagination";
 const emptyProduct = {
   nome: "",
   quantidade_estoque: "0",
@@ -21,6 +22,7 @@ export function Products() {
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
   const [notice, setNotice] = useState(null);
+  const [page, setPage] = useState(1);
 
   async function refresh() {
     try {
@@ -57,6 +59,7 @@ export function Products() {
       ),
     [products, query],
   );
+  const pageRows = filtered.slice((page - 1) * 10, page * 10);
 
   function openForm(product = null) {
     setEditing(product);
@@ -175,7 +178,7 @@ export function Products() {
             <input
               className="min-w-0 w-full border-0 bg-transparent p-0 text-sm text-ink outline-none placeholder:text-[#a1a9a1] focus-visible:outline-none"
               value={query}
-              onChange={(event) => setQuery(event.target.value)}
+              onChange={(event) => { setQuery(event.target.value); setPage(1); }}
               placeholder="Buscar produto"
               aria-label="Buscar produtos"
             />
@@ -217,7 +220,7 @@ export function Products() {
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((product) => (
+                {pageRows.map((product) => (
                   <tr className="[&:hover]:bg-[#fbfcfa]" key={product.id}>
                     <td data-label="Produto" className="h-[57px] border-b border-[#f0f2ee] px-3 text-md text-[#707b72]">
                       <div className="flex items-center gap-2.5">
@@ -260,6 +263,7 @@ export function Products() {
             </table>
           </div>
         )}
+        {!loading && filtered.length > 0 && <Pagination page={page} total={filtered.length} onPageChange={setPage} />}
       </section>
       {modalOpen && (
         <Modal

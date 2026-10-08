@@ -5,6 +5,7 @@ import { Modal } from "../components/Modal";
 import { Notice } from "../components/Notice";
 import { PhoneInput } from "../components/PhoneInput";
 import { formatPhone } from "../utils/phone";
+import { Pagination } from "../components/Pagination";
 const emptyClient = { nome: "", telefone: "" };
 
 export function Clients() {
@@ -17,6 +18,7 @@ export function Clients() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState(null);
+  const [page, setPage] = useState(1);
 
   async function refresh() {
     try {
@@ -56,6 +58,7 @@ export function Clients() {
       ),
     [clients, query],
   );
+  const pageRows = filtered.slice((page - 1) * 10, page * 10);
 
   function openForm(client = null) {
     setEditing(client);
@@ -135,7 +138,7 @@ export function Clients() {
             <input
               className="min-w-0 w-full border-0 bg-transparent p-0 text-sm text-ink outline-none placeholder:text-[#a1a9a1] focus-visible:outline-none"
               value={query}
-              onChange={(event) => setQuery(event.target.value)}
+              onChange={(event) => { setQuery(event.target.value); setPage(1); }}
               placeholder="Buscar por nome ou telefone"
               aria-label="Buscar clientes"
             />
@@ -194,7 +197,7 @@ export function Clients() {
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((client) => (
+                {pageRows.map((client) => (
                   <tr className="border-b border-[#f0f2ee] [&:hover]:bg-[#fbfcfa]" key={client.id}>
                     <td data-label="Cliente">
                       <div className="pl-2 flex items-center gap-2.5">
@@ -237,6 +240,7 @@ export function Clients() {
             </table>
           </div>
         )}
+        {!loading && filtered.length > 0 && <Pagination page={page} total={filtered.length} onPageChange={setPage} />}
       </section>
       {modalOpen && (
         <Modal

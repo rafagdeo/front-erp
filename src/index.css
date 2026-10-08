@@ -52,6 +52,13 @@ input,
 select,
 textarea { font-family: inherit; }
 
+select {
+  padding-right: 2.25rem;
+  background-position: right .7rem center;
+}
+
+select:not([multiple]) { cursor: pointer; }
+
 button:not(:disabled) { cursor: pointer; }
 
 button:focus-visible,
