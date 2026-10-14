@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
-export function Modal({ title, description, onClose, children, wide = false, headerActions }) {
+export function Modal({ title, description, onClose, children, wide = false, headerActions, className = "" }) {
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -23,7 +23,7 @@ export function Modal({ title, description, onClose, children, wide = false, hea
       }}
     >
       <section
-        className={`max-h-[min(90vh,850px)] w-full max-w-[480px] overflow-y-auto rounded-md border border-[#e6ebe3] bg-white p-[22px] shadow-[0_20px_65px_rgba(13,30,19,0.22)] max-[620px]:p-[17px] ${wide ? "max-w-[690px]" : ""}`}
+        className={`max-h-[min(90vh,850px)] w-full max-w-[480px] overflow-y-auto rounded-md border border-[#e6ebe3] bg-white p-[22px] shadow-[0_20px_65px_rgba(13,30,19,0.22)] max-[620px]:p-[17px] ${wide ? "max-w-[690px]" : ""} ${className}`}
         role="dialog"
         aria-modal="true"
         aria-labelledby="modal-title"

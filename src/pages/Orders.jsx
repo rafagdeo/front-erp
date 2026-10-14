@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   ArrowRight,
-  CirclePlus,
-  PackageCheck,
+  Download,
+  ChevronDown,
   Pencil,
   Plus,
   Search,
@@ -12,7 +12,10 @@ import {
 import { api } from "../services/api";
 import { Modal } from "../components/Modal";
 import { Notice } from "../components/Notice";
+import { DiscountInput } from "../components/DiscountInput";
+import "./orders-form.css";
 import { CurrencyInput } from "../components/CurrencyInput";
+import { DatePicker } from "../components/DatePicker";
 import { formatPhone } from "../utils/phone";
 import { useAuth } from "../contexts/useAuth";
 import { WhatsAppIcon } from "../components/WhatsAppIcon";
@@ -22,6 +25,8 @@ import {
   currency,
   dateLabel,
   localDateTimeValue,
+  dateInputValue,
+  isValidDateInput,
 } from "../utils/format";
 
 const statuses = [
@@ -78,7 +83,7 @@ function initialForm() {
     parcelas_restantes: "1",
     valor_pago: "0",
     observacao: "",
-    itens: [{ produto_id: "", quantidade: "1", desconto: "0" }],
+    itens: [{ produto_id: "", quantidade: "1", desconto: "0", desconto_tipo: "valor" }],
   };
 }
 
@@ -133,6 +138,7 @@ export function Orders() {
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [formError, setFormError] = useState("");
   const [form, setForm] = useState(initialForm);
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("todos");
@@ -179,6 +185,25 @@ export function Orders() {
   );
   const pageOrders = visibleOrders.slice((page - 1) * 10, page * 10);
 
+  function exportOrdersCsv() {
+    const columns = ["Pedido", "Cliente", "Telefone", "Data", "Prazo", "Status", "Total", "Recebido", "A receber", "Produtos"];
+    const escapeCsv = (value) => `"${String(value ?? "").replaceAll('"', '""')}"`;
+    const rows = visibleOrders.map((order) => [
+      String(order.id).padStart(4, "0"), order.cliente_nome, order.cliente_telefone,
+      dateLabel(order.data_pedido), dateLabel(order.prazo_pagamento),
+      order.status_atualizado || order.status, Number(order.valor_total || 0).toFixed(2),
+      Number(order.valor_pago || 0).toFixed(2), Number(order.valor_restante || 0).toFixed(2), order.produtos_lista,
+    ]);
+    const csv = [columns, ...rows].map((row) => row.map(escapeCsv).join(";")).join("\r\n");
+    const blob = new Blob(["\uFEFF", csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = "pedidos.csv";
+    anchor.click();
+    URL.revokeObjectURL(url);
+  }
+
   async function refreshOrders() {
     setOrders(await api.orders());
   }
@@ -192,8 +217,39 @@ export function Orders() {
     }));
   }
 
+  function discountAmount(item) {
+    const product = products.find((entry) => String(entry.id) === String(item.produto_id));
+    const subtotalCents = Math.round(Number(product?.preco_venda || 0) * 100) * Number(item.quantidade || 0);
+    const entered = Math.max(0, Number(item.desconto || 0));
+    const discountCents = item.desconto_tipo === "percentual"
+      ? Math.round(subtotalCents * Math.min(entered, 100) / 100)
+      : Math.round(entered * 100);
+    return Math.min(subtotalCents, discountCents) / 100;
+  }
+
+  function changeDiscountType(index, type) {
+    setForm((current) => ({
+      ...current,
+      itens: current.itens.map((item, itemIndex) => {
+        if (itemIndex !== index) return item;
+        const product = products.find((entry) => String(entry.id) === String(item.produto_id));
+        const subtotal = Number(product?.preco_venda || 0) * Number(item.quantidade || 0);
+        const amount = discountAmount(item);
+        const converted = subtotal > 0
+          ? type === "percentual" ? amount * 100 / subtotal : amount
+          : type === "percentual" ? Math.min(100, Number(item.desconto || 0)) : Number(item.desconto || 0);
+        return { ...item, desconto_tipo: type, desconto: String(Number(converted.toFixed(2))) };
+      }),
+    }));
+  }
+
   async function saveOrder(event) {
     event.preventDefault();
+    setFormError("");
+    if (!isValidDateInput(dateInputValue(form.data_pedido)) || !isValidDateInput(dateInputValue(form.prazo_pagamento))) {
+      setFormError("Confira a data do pedido e o prazo de pagamento.");
+      return;
+    }
     setBusy(true);
     const client = clients.find(
       (item) => String(item.id) === String(form.clienteId),
@@ -210,7 +266,7 @@ export function Orders() {
         itens: chosenItems.map((item) => ({
           produto_id: Number(item.produto_id),
           quantidade: Number(item.quantidade),
-          desconto: Number(item.desconto || 0),
+          desconto: Number(discountAmount(item).toFixed(2)),
         })),
       };
       if (editingOrder) {
@@ -245,7 +301,7 @@ export function Orders() {
       const updatedProducts = await api.products();
       setProducts(updatedProducts);
     } catch (cause) {
-      setNotice({ type: "error", message: cause.message });
+      setFormError(cause.message);
     } finally {
       setBusy(false);
     }
@@ -310,9 +366,11 @@ export function Orders() {
         itens: items.map((item) => ({
           produto_id: String(item.produto_id),
           quantidade: String(item.quantidade),
-          desconto: String(item.desconto || 0),
+          desconto: String(Number(item.desconto || 0)),
+          desconto_tipo: "valor",
         })),
       });
+      setFormError("");
       setCreating(true);
     } catch (cause) {
       setNotice({ type: "error", message: cause.message });
@@ -321,9 +379,6 @@ export function Orders() {
     }
   }
 
-  const lowStockProducts = products.filter(
-    (product) => Number(product.quantidade_estoque) <= 0,
-  );
   const orderTotal = form.itens.reduce((total, item) => {
     const product = products.find(
       (entry) => String(entry.id) === String(item.produto_id),
@@ -332,7 +387,7 @@ export function Orders() {
       total +
       (product
         ? Number(product.preco_venda) * Number(item.quantidade || 0) -
-          Number(item.desconto || 0)
+          discountAmount(item)
         : 0)
     );
   }, 0);
@@ -354,6 +409,7 @@ export function Orders() {
           onClick={() => {
             setEditingOrder(null);
             setForm(initialForm());
+            setFormError("");
             setCreating(true);
           }}
           disabled={!clients.length || !products.length}
@@ -375,6 +431,9 @@ export function Orders() {
             {orders.length === 1 ? "pedido registrado" : "pedidos registrados"}
           </div>
           <div className="flex items-center gap-2 max-[820px]:w-full max-[820px]:flex-col max-[820px]:items-stretch">
+            <button type="button" onClick={exportOrdersCsv} disabled={visibleOrders.length === 0} className="inline-flex min-h-[35px] shrink-0 items-center justify-center gap-2 rounded border border-[#dce3da] bg-white px-3 text-sm font-semibold text-[#34453a] hover:bg-[#f2f5ef] disabled:cursor-not-allowed disabled:opacity-50" aria-label={`Exportar ${visibleOrders.length} pedidos para CSV`}>
+              <Download size={16} /> Exportar CSV ({visibleOrders.length})
+            </button>
             <label className="flex h-[35px] w-full max-w-[550px] items-center gap-2 rounded border border-[#e1e7de] bg-white px-[10px] text-[#8b958c] max-[820px]:max-w-full">
               <Search size={17} />
               <input
@@ -787,21 +846,17 @@ export function Orders() {
       {creating && (
         <Modal
           title={editingOrder ? `Editar pedido #${String(editingOrder.id).padStart(4, "0")}` : "Novo pedido"}
-          description={editingOrder ? "Atualize os dados e os itens da venda." : "Selecione um cliente e adicione os produtos da venda."}
-          onClose={() => {
-            setCreating(false);
-            setEditingOrder(null);
-          }}
+          description={editingOrder ? "Revise os produtos e os dados desta venda." : "Organize os produtos e as condições da sua venda."}
+          onClose={() => { setCreating(false); setEditingOrder(null); }}
           wide
+          className="order-modal"
         >
-          <form
-            className={`grid gap-[15px] grid gap-[13px]`}
-            onSubmit={saveOrder}
-          >
-            <label className="grid gap-2 text-base font-semibold text-[#3e4941]">
+          <form className="order-form" onSubmit={saveOrder}>
+            <section className="order-section order-basics" aria-label="Cliente e datas">
+            <label className="order-field">
               Cliente
               <select
-                className="min-h-[39px] w-full rounded border border-[#dfe5dd] bg-white px-[10px] py-2 text-base font-normal text-[#344238] outline-none"
+                className="order-control"
                 value={form.clienteId}
                 onChange={(event) =>
                   setForm({ ...form, clienteId: event.target.value })
@@ -816,38 +871,91 @@ export function Orders() {
                 ))}
               </select>
             </label>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 max-[620px]:grid-cols-1">
-              <label className="grid gap-2 text-base font-semibold text-[#3e4941]">
+            <div className="order-two-columns">
+              <label className="order-field">
                 Data do pedido
-                <input
-                  className="min-h-[39px] w-full rounded border border-[#dfe5dd] bg-white px-[10px] py-2 text-base font-normal text-[#344238] outline-none"
-                  type="date"
-                  value={form.data_pedido}
-                  onChange={(event) =>
-                    setForm({ ...form, data_pedido: event.target.value })
-                  }
-                  required
-                />
+                <DatePicker value={form.data_pedido} onChange={(data_pedido) => setForm({ ...form, data_pedido })} ariaLabel="Data do pedido no formato dia, mês e ano" />
               </label>
-              <label className="grid gap-2 text-base font-semibold text-[#3e4941]">
+              <label className="order-field">
                 Prazo de pagamento
-                <input
-                  className="min-h-[39px] w-full rounded border border-[#dfe5dd] bg-white px-[10px] py-2 text-base font-normal text-[#344238] outline-none"
-                  type="date"
-                  value={form.prazo_pagamento}
-                  onChange={(event) =>
-                    setForm({ ...form, prazo_pagamento: event.target.value })
-                  }
-                  required
-                />
+                <DatePicker value={form.prazo_pagamento} onChange={(prazo_pagamento) => setForm({ ...form, prazo_pagamento })} ariaLabel="Prazo de pagamento no formato dia, mês e ano" />
               </label>
             </div>
+            </section>
+            <section className="order-section" aria-labelledby="order-items-title">
+              <div className="order-section-heading">
+                <h3 id="order-items-title">Produtos</h3>
+                <button type="button" className="order-add-item" onClick={() => setForm({
+                  ...form,
+                  itens: [...form.itens, { produto_id: "", quantidade: "1", desconto: "0", desconto_tipo: "valor" }],
+                })}><Plus size={15} /> Adicionar produto</button>
+              </div>
+              <div className="order-items">
+                {form.itens.map((item, index) => {
+                  const product = products.find((entry) => String(entry.id) === String(item.produto_id));
+                  const lineTotal = Math.max(0, Number(product?.preco_venda || 0) * Number(item.quantidade || 0) - discountAmount(item));
+                  return (
+                    <div className="order-item" key={`item-${index}`}>
+                      <div className="order-item-product">
+                        <label className="order-field">
+                          Produto {form.itens.length > 1 ? index + 1 : ""}
+                          <select className="order-control" value={item.produto_id} onChange={(event) => updateItem(index, "produto_id", event.target.value)} required>
+                            <option value="">Selecione um produto</option>
+                            {products.map((entry) => <option key={entry.id} value={entry.id} disabled={Number(entry.quantidade_estoque) <= 0 && !editingOrder}>
+                              {entry.nome} · {currency(entry.preco_venda)}
+                            </option>)}
+                          </select>
+                        </label>
+                        <button type="button" className="order-remove-item" aria-label={`Remover produto ${index + 1}`} disabled={form.itens.length === 1} onClick={() => setForm({ ...form, itens: form.itens.filter((_, itemIndex) => itemIndex !== index) })}>
+                          <Trash2 size={17} />
+                        </button>
+                      </div>
+                      <div className="order-item-values">
+                        <label className="order-field">Quantidade
+                          <input className="order-control" type="number" min="1" step="1" value={item.quantidade} onChange={(event) => updateItem(index, "quantidade", event.target.value)} required />
+                        </label>
+                        <div className="order-field">
+                          <label htmlFor={`discount-${index}`}>Desconto</label>
+                          <DiscountInput id={`discount-${index}`} value={item.desconto} type={item.desconto_tipo} onValueChange={(desconto) => updateItem(index, "desconto", desconto)} onTypeChange={(type) => changeDiscountType(index, type)} />
+                        </div>
+                        <div className="order-line-total"><span>Subtotal</span><strong>{currency(lineTotal)}</strong></div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+            <section className="order-section" aria-labelledby="order-payment-title">
+              <div className="order-section-heading"><h3 id="order-payment-title">Pagamento</h3></div>
+            <label className="order-field">
+              {editingOrder ? "Status do pedido" : "Status inicial"}
+              <select
+                className="order-control"
+                value={form.status}
+                onChange={(event) =>
+                  setForm({ ...form, status: event.target.value })
+                }
+              >
+                {statuses.map((status) => (
+                  <option key={status.value} value={status.value}>
+                    {status.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+              <details className="order-payment-details" open={!editingOrder}>
+                <summary>
+                  <span>{editingOrder ? "Recebimentos e parcelas" : "Parcelamento"}</span>
+                  {editingOrder && <small>{currency(form.valor_pago)} recebidos</small>}
+                  <ChevronDown size={16} />
+                </summary>
+                <div className="order-payment-content">
             {!editingOrder ? (
-              <div className="grid grid-cols-2 gap-3 max-[620px]:grid-cols-1">
-                <label className="grid gap-2 text-base font-semibold text-[#3e4941]">
+              <div className="order-two-columns">
+                <label className="order-field">
                   Número de parcelas
                   <select
-                    className="min-h-[39px] w-full rounded border border-[#dfe5dd] bg-white px-[10px] py-2 text-base font-normal text-[#344238] outline-none"
+                    className="order-control"
                     value={form.parcelas}
                     onChange={(event) => {
                       const parcelas = event.target.value;
@@ -864,10 +972,10 @@ export function Orders() {
                     ))}
                   </select>
                 </label>
-                <label className="grid gap-2 text-base font-semibold text-[#3e4941]">
+                <label className="order-field">
                   Parcelas já pagas
                   <select
-                    className="min-h-[39px] w-full rounded border border-[#dfe5dd] bg-white px-[10px] py-2 text-base font-normal text-[#344238] outline-none"
+                    className="order-control"
                     value={form.parcelas_pagas}
                     onChange={(event) => setForm({ ...form, parcelas_pagas: event.target.value })}
                     required
@@ -879,12 +987,12 @@ export function Orders() {
                 </label>
               </div>
             ) : (
-              <div className="grid gap-4 rounded-lg border border-[#e5e9e2] bg-[#fafbf9] p-4">
-                <div className="grid grid-cols-2 gap-3 max-[620px]:grid-cols-1">
-                  <label className="grid gap-2 text-base font-semibold text-[#3e4941]">
+              <div className="order-payment-fields">
+                <div className="order-two-columns">
+                  <label className="order-field">
                     Parcelas já pagas
                     <select
-                      className="min-h-[39px] w-full rounded border border-[#dfe5dd] bg-white px-[10px] py-2 text-base font-normal text-[#344238] outline-none"
+                      className="order-control"
                       value={form.parcelas_pagas}
                       onChange={(event) => setForm({ ...form, parcelas_pagas: event.target.value })}
                     >
@@ -893,10 +1001,10 @@ export function Orders() {
                       ))}
                     </select>
                   </label>
-                  <label className="grid gap-2 text-base font-semibold text-[#3e4941]">
+                  <label className="order-field">
                     Parcelas restantes
                     <select
-                      className="min-h-[39px] w-full rounded border border-[#dfe5dd] bg-white px-[10px] py-2 text-base font-normal text-[#344238] outline-none"
+                      className="order-control"
                       value={form.parcelas_restantes}
                       onChange={(event) => setForm({ ...form, parcelas_restantes: event.target.value })}
                     >
@@ -912,11 +1020,10 @@ export function Orders() {
                     </select>
                   </label>
                 </div>
-                <p className="m-0 text-xs text-[#89938a]">
-                  Total do cronograma: {Number(form.parcelas_pagas) + Number(form.parcelas_restantes)} parcelas (máximo 12).
-                  Ajuste as parcelas restantes conforme o valor que o cliente consegue pagar.
+                <p className="order-help">
+                  {Number(form.parcelas_pagas) + Number(form.parcelas_restantes)} parcelas no total · máximo de 12.
                 </p>
-                <label className="grid gap-2 text-base font-semibold text-[#3e4941]">
+                <label className="order-field">
                   Valor total recebido
                   <CurrencyInput
                     value={form.valor_pago}
@@ -944,7 +1051,7 @@ export function Orders() {
                     }}
                     required
                   />
-                  <span className="text-xs font-normal text-[#89938a]">
+                  <span className="order-help">
                     O saldo restante será dividido igualmente entre as parcelas em aberto.
                   </span>
                 </label>
@@ -953,7 +1060,7 @@ export function Orders() {
             {editingOrder && (
               <div className="grid gap-2">
                 <span className="text-sm font-semibold text-[#344238]">Confirmar parcelas pagas</span>
-                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                <div className="order-installments">
                   {paymentInstallments({
                     valor_total: editingOrder.valor_total,
                     valor_pago: Number(form.valor_pago),
@@ -966,7 +1073,7 @@ export function Orders() {
                       <button
                         type="button"
                         key={`edit-installment-${index}`}
-                        className={`grid gap-1 rounded-md border p-3 text-left transition ${paid ? "border-[#cfe4c9] bg-[#f0f8ed] text-[#407249]" : "border-[#e5e9e2] bg-white text-[#59655c] hover:border-[#bfd2ba]"}`}
+                        className={`order-installment grid gap-1 rounded-md border p-3 text-left transition ${paid ? "border-[#cfe4c9] bg-[#f0f8ed] text-[#407249]" : "border-[#e5e9e2] bg-white text-[#59655c] hover:border-[#bfd2ba]"}`}
                         onClick={() => {
                           const totalCount = Number(form.parcelas_pagas) + Number(form.parcelas_restantes);
                           const paidCount = Number(form.parcelas_pagas);
@@ -1001,118 +1108,19 @@ export function Orders() {
                       >
                         <span className="text-xs font-semibold">Parcela {index + 1}</span>
                         <strong className="text-sm">{currency(amount)}</strong>
-                        <span className="text-xs font-semibold">{paid ? "Pago · clique para desfazer" : "Marcar como pago"}</span>
+                        <span className="text-xs font-semibold">{paid ? "Pago · desfazer" : "Marcar como pago"}</span>
                       </button>
                     );
                   })}
                 </div>
               </div>
             )}
-            <div className="flex items-center justify-between gap-1 pt-1 text-base text-[#3b493e] max-[390px]:items-start max-[390px]:gap-1 max-[390px]:text-sm">
-              <strong>Itens do pedido</strong>
-              <button
-                type="button"
-                className={`inline-flex items-center justify-center gap-1.5 border-0 bg-transparent p-[5px] text-base font-bold text-[#365b42] hover:text-[#70913f] max-[390px]:text-sm`}
-                onClick={() =>
-                  setForm({
-                    ...form,
-                    itens: [
-                      ...form.itens,
-                      { produto_id: "", quantidade: "1", desconto: "0" },
-                    ],
-                  })
-                }
-              >
-                <CirclePlus size={16} /> Adicionar item
-              </button>
-            </div>
-            <div className="grid gap-2">
-              {form.itens.map((item, index) => (
-                <div className="grid grid-cols-[minmax(190px,1fr)_92px_105px_30px] items-end gap-[9px] rounded border border-[#e9eee6] bg-[#fafbf9] p-[11px] max-[620px]:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_28px] max-[620px]:gap-1.5 max-[620px]:p-2 max-[390px]:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_26px] max-[390px]:gap-1" key={`item-${index}`}>
-                  <label className={`grid gap-2 text-base font-semibold text-[#3e4941] min-w-0 max-[620px]:col-span-full`}>
-                    Produto
-                    <select
-                      className="min-h-[39px] w-full rounded border border-[#dfe5dd] bg-white px-[10px] py-2 text-base font-normal text-[#344238] outline-none"
-                      value={item.produto_id}
-                      onChange={(event) =>
-                        updateItem(index, "produto_id", event.target.value)
-                      }
-                      required
-                    >
-                      <option value="">Selecione um produto</option>
-                      {products.map((product) => (
-                        <option
-                          key={product.id}
-                          value={product.id}
-                          disabled={Number(product.quantidade_estoque) <= 0}
-                        >
-                          {product.nome} · {currency(product.preco_venda)} ·
-                          estoque {product.quantidade_estoque}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <label className={`grid gap-2 text-base font-semibold text-[#3e4941] min-w-0 max-[620px]:text-sm`}>
-                    Quantidade
-                    <input
-                      className={`min-h-[39px] w-full rounded border border-[#dfe5dd] bg-white px-[10px] py-2 text-base font-normal text-[#344238] outline-none max-[620px]:px-[5px] max-[620px]:text-sm`}
-                      type="number"
-                      min="1"
-                      step="1"
-                      value={item.quantidade}
-                      onChange={(event) =>
-                        updateItem(index, "quantidade", event.target.value)
-                      }
-                      required
-                    />
-                  </label>
-                  <label className={`grid gap-2 text-base font-semibold text-[#3e4941] min-w-0 max-[620px]:text-sm`}>
-                    Desconto
-                    <CurrencyInput
-                      value={item.desconto}
-                      onValueChange={(desconto) =>
-                        updateItem(index, "desconto", desconto)
-                      }
-                      required
-                    />
-                  </label>
-                  <button
-                    type="button"
-                    className={`inline-grid h-[34px] w-[34px] place-items-center rounded border border-transparent bg-transparent text-[#647067] hover:border-[#e5e9e2] hover:bg-[#f8faf6] hover:text-nexo mb-0.5 text-[#a65c50] disabled:text-[#c0c7c0] max-[620px]:col-[3] max-[620px]:row-[2]`}
-                    aria-label="Remover item"
-                    disabled={form.itens.length === 1}
-                    onClick={() =>
-                      setForm({
-                        ...form,
-                        itens: form.itens.filter(
-                          (_, itemIndex) => itemIndex !== index,
-                        ),
-                      })
-                    }
-                  >
-                    <Trash2 size={17} />
-                  </button>
                 </div>
-              ))}
-            </div>
-            <label className="grid gap-2 text-base font-semibold text-[#3e4941]">
-              Status inicial
-              <select
-                className="min-h-[39px] w-full rounded border border-[#dfe5dd] bg-white px-[10px] py-2 text-base font-normal text-[#344238] outline-none"
-                value={form.status}
-                onChange={(event) =>
-                  setForm({ ...form, status: event.target.value })
-                }
-              >
-                {statuses.map((status) => (
-                  <option key={status.value} value={status.value}>
-                    {status.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="grid gap-2 text-base font-semibold text-[#3e4941]">
-              Observação <span className="font-normal text-[#9ba39b]">(opcional)</span>
+              </details>
+            </section>
+            <section className="order-section order-notes">
+            <label className="order-field">
+              <span className="order-label-row">Observação <small>Opcional</small></span>
               <textarea
                 className="min-h-[72px] w-full resize-y rounded border border-[#dfe5dd] bg-white px-[10px] py-2 text-base font-normal text-[#344238] outline-none"
                 rows="2"
@@ -1123,38 +1131,17 @@ export function Orders() {
                 }
               />
             </label>
-            <div className="flex items-center justify-between rounded bg-[#f0f5eb] px-[14px] py-[13px] text-[#4f6453]">
-              <span className="inline-flex items-center gap-2 text-sm">
-                <PackageCheck size={17} /> Total estimado
-              </span>
-              <strong className="font-display text-[17px] font-bold text-[#2d4534]">
-                {currency(orderTotal)}
-              </strong>
-            </div>
-            {lowStockProducts.length > 0 && (
-              <div className="inline-warning">
-                Há produtos sem estoque disponível; revise a quantidade antes de
-                salvar.
+            </section>
+            {formError && <p className="order-form-error" role="alert">{formError}</p>}
+            <footer className="order-form-footer">
+              <div className="order-grand-total"><span>Total do pedido</span><strong>{currency(orderTotal)}</strong></div>
+              <div className="order-form-actions">
+                <button type="button" className="order-cancel" onClick={() => { setCreating(false); setEditingOrder(null); }}>Cancelar</button>
+                <button type="submit" className="order-submit" disabled={busy}>
+                  {busy ? "Salvando..." : editingOrder ? "Salvar alterações" : "Criar pedido"}<ArrowRight size={16} />
+                </button>
               </div>
-            )}
-            <div className="flex justify-between gap-2 pt-[7px]">
-              <button
-                type="button"
-                className={`inline-flex min-h-[42px] items-center justify-center gap-2 rounded-[5px] border border-transparent px-[15px] text-base font-bold transition hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-60 border-[#dce3da] bg-white text-[#34453a] hover:border-[#c8d3c5] hover:bg-[#f2f5ef]`}
-                onClick={() => setCreating(false)}
-              >
-                Cancelar
-              </button>
-              <button
-                className={`inline-flex min-h-[42px] items-center justify-center gap-2 rounded-[5px] border border-transparent px-[15px] text-base font-bold transition hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-60 bg-nexo text-white hover:bg-nexo-hover`}
-                disabled={busy}
-              >
-                {busy
-                  ? editingOrder ? "Salvando..." : "Registrando..."
-                  : editingOrder ? "Salvar alterações" : "Confirmar pedido"}{" "}
-                <ArrowRight size={16} />
-              </button>
-            </div>
+            </footer>
           </form>
         </Modal>
       )}

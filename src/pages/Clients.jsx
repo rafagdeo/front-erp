@@ -6,7 +6,9 @@ import { Notice } from "../components/Notice";
 import { PhoneInput } from "../components/PhoneInput";
 import { formatPhone } from "../utils/phone";
 import { Pagination } from "../components/Pagination";
-const emptyClient = { nome: "", telefone: "" };
+import { DatePicker } from "../components/DatePicker";
+import { dateInputValue, isValidDateInput } from "../utils/format";
+const emptyClient = { nome: "", telefone: "", data_nascimento: "" };
 
 export function Clients() {
   const [clients, setClients] = useState([]);
@@ -64,16 +66,35 @@ export function Clients() {
     setEditing(client);
     setModalOpen(true);
     setForm(
-      client ? { nome: client.nome, telefone: client.telefone } : emptyClient,
+      client
+        ? {
+            nome: client.nome,
+            telefone: client.telefone,
+            data_nascimento: dateInputValue(client.data_nascimento),
+          }
+        : emptyClient,
     );
   }
 
   async function save(event) {
     event.preventDefault();
+    if (form.data_nascimento && !isValidDateInput(form.data_nascimento)) {
+      setNotice({
+        type: "error",
+        message: "Informe uma data de nascimento válida no formato dd/MM/yyyy.",
+      });
+      return;
+    }
+    const payload = {
+      ...form,
+      data_nascimento: form.data_nascimento
+        ? `${form.data_nascimento.slice(6)}-${form.data_nascimento.slice(3, 5)}-${form.data_nascimento.slice(0, 2)}`
+        : null,
+    };
     setBusy(true);
     try {
-      if (editing) await api.updateClient(editing.id, form);
-      else await api.createClient(form);
+      if (editing) await api.updateClient(editing.id, payload);
+      else await api.createClient(payload);
       setModalOpen(false);
       setNotice({
         message: editing ? "Cliente atualizado." : "Cliente cadastrado.",
@@ -138,7 +159,10 @@ export function Clients() {
             <input
               className="min-w-0 w-full border-0 bg-transparent p-0 text-sm text-ink outline-none placeholder:text-[#a1a9a1] focus-visible:outline-none"
               value={query}
-              onChange={(event) => { setQuery(event.target.value); setPage(1); }}
+              onChange={(event) => {
+                setQuery(event.target.value);
+                setPage(1);
+              }}
               placeholder="Buscar por nome ou telefone"
               aria-label="Buscar clientes"
             />
@@ -189,6 +213,9 @@ export function Clients() {
                   <th className="h-[39px] border-b border-[#edf0eb] px-3 text-xs font-bold tracking-[.5px] text-[#929a92]">
                     TELEFONE
                   </th>
+                  <th className="h-[39px] border-b border-[#edf0eb] px-3 text-xs font-bold tracking-[.5px] text-[#929a92]">
+                    NASCIMENTO
+                  </th>
                   <th
                     className={`h-[39px] border-b border-[#edf0eb] px-3 text-xs font-bold tracking-[.5px] text-[#929a92] text-right`}
                   >
@@ -198,7 +225,10 @@ export function Clients() {
               </thead>
               <tbody>
                 {pageRows.map((client) => (
-                  <tr className="border-b border-[#f0f2ee] [&:hover]:bg-[#fbfcfa]" key={client.id}>
+                  <tr
+                    className="border-b border-[#f0f2ee] [&:hover]:bg-[#fbfcfa]"
+                    key={client.id}
+                  >
                     <td data-label="Cliente">
                       <div className="pl-2 flex items-center gap-2.5">
                         <span className="grid h-[31px] w-[31px] shrink-0 place-items-center rounded-full bg-[#ecf2e9] font-display text-xs font-bold text-[#46684c]">
@@ -214,6 +244,12 @@ export function Clients() {
                       className="h-[57px] px-3 text-md text-[#707b72]"
                     >
                       {formatPhone(client.telefone)}
+                    </td>
+                    <td
+                      data-label="Nascimento"
+                      className="h-[57px] px-3 text-md text-[#707b72]"
+                    >
+                      {dateInputValue(client.data_nascimento) || "—"}
                     </td>
                     <td
                       data-label="Ações"
@@ -240,7 +276,13 @@ export function Clients() {
             </table>
           </div>
         )}
-        {!loading && filtered.length > 0 && <Pagination page={page} total={filtered.length} onPageChange={setPage} />}
+        {!loading && filtered.length > 0 && (
+          <Pagination
+            page={page}
+            total={filtered.length}
+            onPageChange={setPage}
+          />
+        )}
       </section>
       {modalOpen && (
         <Modal
@@ -270,6 +312,17 @@ export function Clients() {
                 value={form.telefone}
                 onValueChange={(telefone) => setForm({ ...form, telefone })}
                 required
+              />
+            </label>
+            <label className="grid gap-2 text-base font-semibold text-[#3e4941]">
+              Data de nascimento{" "}
+              <span className="font-normal text-[#9ba39b]">(opcional)</span>
+              <DatePicker
+                value={form.data_nascimento}
+                onChange={(data_nascimento) =>
+                  setForm({ ...form, data_nascimento })
+                }
+                ariaLabel="Data de nascimento no formato dia, mês e ano"
               />
             </label>
             <div className="flex justify-between gap-2 pt-[7px]">

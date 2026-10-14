@@ -8,6 +8,7 @@ import { Clients } from './pages/Clients'
 import { Products } from './pages/Products'
 import { Orders } from './pages/Orders'
 import { Profile } from './pages/Profile'
+import { ForgotPassword, ResetPassword } from './pages/PasswordReset'
 function ProtectedRoutes() {
   return (
     <AppShell>
@@ -31,6 +32,8 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/login" element={user ? <Navigate to="/dashboard" replace /> : <Login />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/*" element={user ? <ProtectedRoutes /> : <Navigate to="/login" replace />} />
     </Routes>
   )

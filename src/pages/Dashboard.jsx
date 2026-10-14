@@ -4,7 +4,6 @@ import {
   ArrowRight,
   ArrowUpRight,
   Boxes,
-  CalendarDays,
   CircleDollarSign,
   Clock3,
   Plus,
@@ -24,7 +23,8 @@ import {
   Legend,
 } from "chart.js";
 import { api } from "../services/api";
-import { currency, dateLabel } from "../utils/format";
+import { DatePicker } from "../components/DatePicker";
+import { currency, dateLabel, isValidDateInput } from "../utils/format";
 
 ChartJS.register(
   CategoryScale,
@@ -185,8 +185,9 @@ export function Dashboard() {
         end,
       };
     if (period === "custom") {
-      start = new Date(`${customStart}T00:00:00`);
-      end = new Date(`${customEnd}T00:00:00`);
+      const toIso = (value) => value.split("/").reverse().join("-");
+      start = new Date(`${toIso(customStart)}T00:00:00`);
+      end = new Date(`${toIso(customEnd)}T00:00:00`);
       if (start > end) [start, end] = [end, start];
     }
     const startKey = isoDate(start);
@@ -354,7 +355,7 @@ export function Dashboard() {
       },
     },
   };
-  const customMissingDate = period === "custom" && (!customStart || !customEnd);
+  const customMissingDate = period === "custom" && (!isValidDateInput(customStart) || !isValidDateInput(customEnd));
 
   return (
     <div className="animate-[settle-in_0.35s_ease_both]">
@@ -416,7 +417,7 @@ export function Dashboard() {
             </label>
             <select
               id="finance-period"
-              className="min-h-[38px] rounded border border-[#dfe5dd] bg-white px-3 pr-9 text-sm text-[#344238]"
+              className="h-[42px] rounded-md border border-[#dfe5dd] bg-white px-3 pr-9 text-sm font-normal text-[#344238]"
               value={period}
               onChange={(event) => setPeriod(event.target.value)}
             >
@@ -427,22 +428,9 @@ export function Dashboard() {
             </select>
             {period === "custom" && (
               <div className="flex flex-wrap items-center gap-2">
-                <CalendarDays size={16} className="text-[#839087]" />
-                <input
-                  aria-label="Data inicial"
-                  type="date"
-                  value={customStart}
-                  onChange={(event) => setCustomStart(event.target.value)}
-                  className="min-h-[38px] rounded border border-[#dfe5dd] px-2 text-sm"
-                />
+                <DatePicker ariaLabel="Data inicial no formato dia, mês e ano" placeholder="Data inicial" value={customStart} onChange={setCustomStart} className="w-[160px]" />
                 <span className="text-sm text-muted">até</span>
-                <input
-                  aria-label="Data final"
-                  type="date"
-                  value={customEnd}
-                  onChange={(event) => setCustomEnd(event.target.value)}
-                  className="min-h-[38px] rounded border border-[#dfe5dd] px-2 text-sm"
-                />
+                <DatePicker ariaLabel="Data final no formato dia, mês e ano" placeholder="Data final" value={customEnd} onChange={setCustomEnd} className="w-[160px]" align="end" />
               </div>
             )}
           </div>

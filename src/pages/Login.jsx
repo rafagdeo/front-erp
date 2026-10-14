@@ -5,17 +5,22 @@ import {
   Mail,
   PackageOpen,
   UserRound,
+  Eye,
+  EyeOff,
 } from "lucide-react";
-import { Navigate, useNavigate } from "react-router-dom";
+import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/useAuth";
 import { PhoneInput } from "../components/PhoneInput";
 import { isValidPhone } from "../utils/phone";
 export function Login() {
   const { user, login, register } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [creatingAccount, setCreatingAccount] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [form, setForm] = useState({
     username: "",
     email: "",
@@ -54,13 +59,20 @@ export function Login() {
     <main className="grid min-h-screen grid-cols-[minmax(380px,0.92fr)_1.08fr] bg-white max-[620px]:grid-cols-1">
       <section className="auth-pattern relative isolate flex min-h-screen flex-col justify-between overflow-hidden bg-nexo px-[8.3%] py-11 text-[#f1f5ef] max-[620px]:hidden">
         <div className="flex items-center gap-3 font-display text-[17px] font-extrabold leading-none">
-          <span className="inline-grid h-[42px] w-[42px] place-items-center rounded-[9px] bg-nexo-lime font-display text-2xl font-extrabold leading-none text-nexo">n.</span>
+          <span className="inline-grid h-[42px] w-[42px] place-items-center rounded-[9px] bg-nexo-lime font-display text-2xl font-extrabold leading-none text-nexo">
+            n.
+          </span>
           <span>
-            NEXO <small className="mt-1 block text-[9px] font-semibold tracking-[1px] text-[#9eafa2]">GESTÃO</small>
+            NEXO{" "}
+            <small className="mt-1 block text-[9px] font-semibold tracking-[1px] text-[#9eafa2]">
+              GESTÃO
+            </small>
           </span>
         </div>
         <div className="my-auto max-w-[510px] py-[70px]">
-          <span className={`text-[10px] font-bold tracking-[1px] text-[#839087] text-nexo-lime`}>
+          <span
+            className={`text-[10px] font-bold tracking-[1px] text-[#839087] text-nexo-lime`}
+          >
             OPERAÇÃO, EM ORDEM
           </span>
           <h1 className="mb-4 mt-[22px] max-w-[460px] font-display text-[48px] font-bold leading-[1.12]">
@@ -80,10 +92,16 @@ export function Login() {
       <section className="grid place-items-center px-[7%] py-12 max-[620px]:min-h-screen max-[620px]:items-start max-[620px]:px-6 max-[620px]:py-[30px]">
         <div className="my-auto w-full max-w-[405px] animate-[settle-in_0.45s_ease_both]">
           <div className="mb-[50px] hidden items-center gap-[9px] font-display text-xs font-extrabold text-[#304236] max-[620px]:flex">
-            <span className={`inline-grid h-[42px] w-[42px] place-items-center rounded-[9px] bg-nexo-lime font-display text-2xl font-extrabold leading-none text-nexo h-8 w-8 text-[19px]`}>n.</span>{" "}
+            <span
+              className={`inline-grid h-[42px] w-[42px] place-items-center rounded-[9px] bg-nexo-lime font-display text-2xl font-extrabold leading-none text-nexo h-8 w-8 text-[19px]`}
+            >
+              n.
+            </span>{" "}
             NEXO GESTÃO
           </div>
-          <span className={`text-[10px] font-bold tracking-[1px] text-[#839087] mb-3.25 block`}>
+          <span
+            className={`text-[10px] font-bold tracking-[1px] text-[#839087] mb-3.25 block`}
+          >
             {creatingAccount ? "COMECE POR AQUI" : "ÁREA DE ACESSO"}
           </span>
           <h2 className="m-0 font-display text-[29px] font-bold leading-tight">
@@ -94,6 +112,14 @@ export function Login() {
               ? "Configure seu acesso para começar."
               : "Acesse seu espaço de trabalho."}
           </p>
+          {location.state?.notice && (
+            <p
+              className="mb-4 rounded-md border border-[#dcebd5] bg-[#f1f7ed] px-3 py-2.5 text-sm text-[#456a49]"
+              role="status"
+            >
+              {location.state.notice}
+            </p>
+          )}
           <form className="grid gap-[17px]" onSubmit={submit}>
             {creatingAccount && (
               <label className="grid gap-2 text-base font-semibold text-[#3e4941]">
@@ -111,6 +137,7 @@ export function Login() {
                 </div>
               </label>
             )}
+            
             <label className="grid gap-2 text-base font-semibold text-[#3e4941]">
               E-mail
               <div className="flex h-[46px] items-center gap-2.5 rounded-[5px] border border-[#dfe5dd] px-[13px] text-[#879189]">
@@ -151,7 +178,7 @@ export function Login() {
                 <LockKeyhole size={17} />
                 <input
                   className="h-full w-full border-0 bg-transparent text-base text-ink outline-none focus-visible:outline-none"
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   autoComplete={
                     creatingAccount ? "new-password" : "current-password"
                   }
@@ -161,6 +188,15 @@ export function Login() {
                   required
                   minLength={creatingAccount ? 10 : 1}
                 />
+                <button
+                  type="button"
+                  className="grid h-8 w-8 shrink-0 place-items-center text-[#879189]"
+                  onClick={() => setShowPassword((shown) => !shown)}
+                  aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+                  aria-pressed={showPassword}
+                >
+                  {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
+                </button>
               </div>
             </label>
             {creatingAccount && (
@@ -170,7 +206,7 @@ export function Login() {
                   <LockKeyhole size={17} />
                   <input
                     className="h-full w-full border-0 bg-transparent text-base text-ink outline-none focus-visible:outline-none"
-                    type="password"
+                    type={showConfirmPassword ? "text" : "password"}
                     autoComplete="new-password"
                     name="confirmPassword"
                     value={form.confirmPassword}
@@ -178,6 +214,23 @@ export function Login() {
                     required
                     minLength={10}
                   />
+                  <button
+                    type="button"
+                    className="grid h-8 w-8 shrink-0 place-items-center text-[#879189]"
+                    onClick={() => setShowConfirmPassword((shown) => !shown)}
+                    aria-label={
+                      showConfirmPassword
+                        ? "Ocultar confirmação de senha"
+                        : "Mostrar confirmação de senha"
+                    }
+                    aria-pressed={showConfirmPassword}
+                  >
+                    {showConfirmPassword ? (
+                      <EyeOff size={17} />
+                    ) : (
+                      <Eye size={17} />
+                    )}
+                  </button>
                 </div>
               </label>
             )}
@@ -208,8 +261,20 @@ export function Login() {
           >
             {creatingAccount
               ? "Já tem acesso? Entrar"
-              : "Primeiro acesso? Criar conta"}
+              : "Primeiro acesso? Crie sua conta agora!"}
           </button>
+
+          {!creatingAccount && (
+              <div className="mt-6 flex justify-start">
+                <Link
+                  className="text-sm font-semibold text-[#416b45] hover:underline"
+                  to="/forgot-password"
+                >
+                  Esqueceu a senha?
+                </Link>
+              </div>
+            )}
+
           <span className="mt-[38px] flex flex-col gap-4 md:flex md:items-start md:gap-[7px] text-[13px] text-[#8b958d]">
             <PackageOpen size={18} /> Seus dados protegidos por sessão segura
           </span>
